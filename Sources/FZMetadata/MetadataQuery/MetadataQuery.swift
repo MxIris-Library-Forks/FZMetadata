@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import FZSwiftUtils
 
 /**
  An object that can search files and fetch metadata attributes for large batches of files.
@@ -47,7 +48,7 @@ import Foundation
  query.start()
  ```
 
- It can also monitor for changes via ``enableMonitoring()``.  The query calls your results handler, whenever new files match the query or file attributes change.
+ It can also monitor for updates to the results via ``enableMonitoring()``.  The query calls your results handler, whenever new files match the query or the observed file attributes change.
 
  ```swift
  query.predicate = { $0.isScreenCapture } // Screenshots files
@@ -163,6 +164,11 @@ open class MetadataQuery: NSObject {
             query.predicate = predicate?(.root).predicate ?? NSPredicate(format: "%K == 'public.item'", NSMetadataItemContentTypeTreeKey)
         }
     }
+    
+    /// The format string of the predicate.
+    open var predicateFormat: String {
+        query.predicate?.predicateFormat ?? ""
+    }
 
     /**
      An array of file-system directory URLs.
@@ -234,20 +240,14 @@ open class MetadataQuery: NSObject {
 
     /// Starts the query, if it isn't running and resets the current result.
     open func start() {
-        func startQuery() {
-            if query.start() == true {
-                resetResults()
+        runWithOperationQueue {
+            if self.query.start() == true {
+                self.resetResults()
             }
-        }
-
-        if let operationQueue = operationQueue {
-            operationQueue.addOperation {
-                startQuery()
-            }
-        } else {
-            startQuery()
         }
     }
+    
+    
 
     /// Stops the  current query from gathering any further results.
     open func stop() {
@@ -275,6 +275,16 @@ open class MetadataQuery: NSObject {
             isMonitoring = true
         }
     }
+    
+    func runWithOperationQueue(_ block: @escaping () -> Void) {
+        if let operationQueue = operationQueue {
+            operationQueue.addOperation {
+                block()
+            }
+        } else {
+            block()
+        }
+    }
 
     /**
      An array containing the query’s results.
@@ -283,20 +293,20 @@ open class MetadataQuery: NSObject {
      */
     open var results: [MetadataItem] {
         updateResults()
-        return _results
+        return _results.synchronized
     }
 
     var resultsCount: Int {
         query.resultCount
     }
-
-    var _results: [MetadataItem] = []
+    
+    var _results: SynchronizedArray<MetadataItem> = []
     func updateResults() {
-        _results = results(at: Array(0 ..< query.resultCount))
+        _results.synchronized = results(at: Array(0 ..< query.resultCount))
     }
 
     func resetResults() {
-        _results.removeAll()
+        self._results.removeAll()
     }
 
     func results(at indexes: [Int]) -> [MetadataItem] {
@@ -316,17 +326,11 @@ open class MetadataQuery: NSObject {
 
     var allAttributeKeys: [String] {
         var attributes = query.valueListAttributes
-        attributes = attributes + sortedBy.compactMap(\.key)
-        attributes = attributes + groupingAttributes.compactMap(\.rawValue) + ["kMDQueryResultContentRelevance"]
+        attributes += ["kMDQueryResultContentRelevance"]
+        attributes += predicate?(.root).mdKeys ?? ["kMDItemContentTypeTree"]
+        attributes += sortedBy.compactMap(\.key)
+        attributes += groupingAttributes.compactMap(\.rawValue)
         return attributes.uniqued()
-    }
-
-    var predicateAttributes: [MetadataItem.Attribute] {
-        predicate?(.root).attributes ?? []
-    }
-
-    var sortingAttributes: [MetadataItem.Attribute] {
-        sortedBy.compactMap { MetadataItem.Attribute(rawValue: $0.key ?? "_") }
     }
 
     /**
@@ -339,9 +343,11 @@ open class MetadataQuery: NSObject {
     }
 
     /**
-     Enables the monitoring of changes to the result.
+     Enables the monitoring of updates to the results.
+     
+     The query calls your results handler, whenever new files match the query or the observed metadata attributes change.
 
-     By default, notification of updated results occurs at 1.0 seconds. Use ``updateNotificationInterval`` to change the internval.
+     By default, notification of updated results occurs at `1.0` seconds. Use ``updateNotificationInterval`` to change the internval.
      */
     open func enableMonitoring() {
         query.enableUpdates()
@@ -382,7 +388,7 @@ open class MetadataQuery: NSObject {
         // Swift.debugPrint("MetadataQuery gatheringFinished")
         runWithPausedMonitoring {
             let results = results
-            let diff = ResultsDifference.added(_results)
+            let diff = ResultsDifference.added(_results.synchronized)
             postResults(results, difference: diff)
         }
 
@@ -412,17 +418,13 @@ open class MetadataQuery: NSObject {
                 (changed + added).forEach { _results.move($0, to: query.index(ofResult: $0) + 1) }
             }
             let diff = ResultsDifference(added: added, removed: removed, changed: changed)
-            postResults(_results, difference: diff)
+            postResults(_results.synchronized, difference: diff)
         }
     }
 
     func postResults(_ items: [MetadataItem], difference: ResultsDifference) {
-        if let operationQueue = operationQueue {
-            operationQueue.addOperation {
-                self.resultsHandler?(items, difference)
-            }
-        } else {
-            resultsHandler?(items, difference)
+        runWithOperationQueue {
+            self.resultsHandler?(items, difference)
         }
     }
 
@@ -446,75 +448,15 @@ open class MetadataQuery: NSObject {
 }
 
 /*
- public extension MetadataQuery {
-     /// Returns a string for a case sensitive predicate.
-     func c(_ input: String) -> String {
-         return "$[c]\(input)"
-     }
-
-     /// Returns an array of strings for a case sensitive predicate.
-     func c<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
-
-     /// Returns a string for a diacritic sensitive predicate.
-     func d(_ input: String) -> String {
-         return "$[d]\(input)"
-     }
-
-     /// Returns an array of strings for a diacritic sensitive predicate.
-     func d<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
-
-     /// Returns a string for a word-based predicate.
-     func w(_ input: String) -> String {
-         return "$[w]\(input)"
-     }
-
-     /// Returns an array of strings for a word-based predicate.
-     func w<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
-
-     /// Returns a string for a case & diacritic sensitive predicate.
-     func cd(_ input: String) -> String {
-         return "$[cd]\(input)"
-     }
-
-     /// Returns an array of strings for a case & diacritic sensitive predicate.
-     func cd<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
-
-     /// Returns a string for a case sensitive & word-based predicate.
-     func cw(_ input: String) -> String {
-         return "$[cw]\(input)"
-     }
-
-     /// Returns an array of strings for a case sensitive & word-based predicate.
-     func cw<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
-
-     /// Returns a string for a diacritic sensitive & word-based predicate.
-     func dw(_ input: String) -> String {
-         return "$[dw]\(input)"
-     }
-
-     /// Returns an array of strings for a diacritic sensitive & word-based predicate.
-     func dw<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
-
-     /// Returns a string for a case & diacritic sensitive word-based predicate.
-     func cdw(_ input: String) -> String {
-         return "$[cdw]\(input)"
-     }
-
-     /// Returns an array of strings for a case & diacritic sensitive word-based predicate.
-     func cdw<S: Sequence<String>>(_ input: S) -> [String] {
-         return input.compactMap({c($0)})
-     }
- }
- */
+#if os(macOS)
+import AppKit
+extension MetadataQuery {
+    /// Displays a Spotlight search results window in Finder for the ``predicate-swift.property``.
+    public func showSearchResultsInFinder() {
+        if let format = query.predicate?.predicateFormat {
+            NSWorkspace.shared.showSearchResults(forQueryString: format)
+        }
+    }
+}
+#endif
+*/

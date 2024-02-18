@@ -8,22 +8,22 @@
 import Foundation
 
 public extension MetadataQuery {
-    /// Options for string comparison in metadata query predicates.
+    /// Options for string comparison in a query predicate.
     struct PredicateStringOptions: OptionSet {
-        /// Case-sensitive predicate.
-        public static let caseSensitive = Self(rawValue: 1)
-        /// Diacritic-sensitive predicate.
-        public static let diacriticSensitive = Self(rawValue: 2)
+        /// Case-sensitive string comparison.
+        public static let caseSensitive = Self(rawValue: 1 << 0)
+        /// Diacritic-sensitive string comparison.
+        public static let diacriticSensitive = Self(rawValue: 1 << 1)
 
-        /// Case-sensitive predicate.
-        public static let c = Self(rawValue: 1)
-        /// Diacritic-sensitive predicate.
-        public static let d = Self(rawValue: 2)
-        /// Case and diacritical-sensitive predicate.
+        /// Case-sensitive string comparison.
+        public static let c = Self(rawValue: 1 << 0)
+        /// Diacritic-sensitive string comparison.
+        public static let d = Self(rawValue: 1 << 1)
+        /// Case and diacritical-sensitive string comparison.
         public static let cd: Self = [.c, .d]
 
-        static let wordBased = Self(rawValue: 3)
-        static let w = Self(rawValue: 3)
+        static let wordBased = Self(rawValue: 1 << 2)
+        static let w = Self(rawValue: 1 << 2)
         static let cdw: Self = [.c, .d, .w]
         static let cw: Self = [.c, .w]
         static let dw: Self = [.d, .w]
@@ -37,7 +37,7 @@ public extension MetadataQuery {
             "$[\(contains(.caseSensitive) ? "" : "c")\(contains(.diacriticSensitive) ? "" : "d")\(contains(.wordBased) ? "w" : "")]"
         }
 
-        public init(extracting value: String) {
+        init(extracting value: String) {
             switch value {
             case _ where value.hasPrefix("$[c]"):
                 self = .c
