@@ -301,12 +301,15 @@ open class MetadataQuery: NSObject {
     }
     
     var _results: SynchronizedArray<MetadataItem> = []
+    var currentResults: SynchronizedArray<MetadataItem> = []
+
     func updateResults() {
         _results.synchronized = results(at: Array(0 ..< query.resultCount))
     }
 
     func resetResults() {
-        self._results.removeAll()
+        _results.removeAll()
+        currentResults.removeAll()
     }
 
     func results(at indexes: [Int]) -> [MetadataItem] {
@@ -411,7 +414,7 @@ open class MetadataQuery: NSObject {
             let changed: [MetadataItem] = (notification.userInfo?[NSMetadataQueryUpdateChangedItemsKey] as? [MetadataItem]) ?? []
 
             guard !added.isEmpty || !removed.isEmpty || !changed.isEmpty else { return }
-
+            // Swift.debugPrint("MetadataQuery updated, added: \(added.count), removed: \(removed.count), changed: \(changed.count)")
             _results.remove(removed)
             _results = _results + added
             if changed.isEmpty == false {
@@ -419,9 +422,15 @@ open class MetadataQuery: NSObject {
             }
             let diff = ResultsDifference(added: added, removed: removed, changed: changed)
             postResults(_results.synchronized, difference: diff)
+            /*
+            if currentResults.synchronized != _results.synchronized {
+                currentResults.synchronized = _results.synchronized
+                postResults(_results.synchronized, difference: diff)
+            }
+             */
         }
     }
-
+    
     func postResults(_ items: [MetadataItem], difference: ResultsDifference) {
         runWithOperationQueue {
             self.resultsHandler?(items, difference)
@@ -437,6 +446,12 @@ open class MetadataQuery: NSObject {
 
     func removeObserver() {
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    /// Creates a metadata query with the specified operation queue.
+    public convenience init(queue: OperationQueue) {
+        self.init()
+        operationQueue = queue
     }
 
     override public init() {
