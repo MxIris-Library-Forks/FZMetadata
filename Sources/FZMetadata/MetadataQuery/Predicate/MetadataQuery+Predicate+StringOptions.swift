@@ -1,5 +1,5 @@
 //
-//  MetadataQuery+PredicateStringOptions.swift
+//  MetadataQuery+Predicate+StringOptions.swift
 //
 //
 //  Created by Florian Zand on 06.08.23.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public extension MetadataQuery {
+extension MetadataQuery {
     /// Options for string comparison in a query predicate.
     struct PredicateStringOptions: OptionSet {
         /// Case-sensitive string comparison.
@@ -21,9 +21,10 @@ public extension MetadataQuery {
         public static let d = Self(rawValue: 1 << 1)
         /// Case and diacritical-sensitive string comparison.
         public static let cd: Self = [.c, .d]
-
-        static let wordBased = Self(rawValue: 1 << 2)
-        static let w = Self(rawValue: 1 << 2)
+        /// Matches words.
+        public static let wordBased = Self(rawValue: 1 << 2)
+        /// Matches words.
+        public static let w = Self(rawValue: 1 << 2)
         static let cdw: Self = [.c, .d, .w]
         static let cw: Self = [.c, .w]
         static let dw: Self = [.d, .w]
@@ -56,12 +57,6 @@ public extension MetadataQuery {
             default:
                 self = []
             }
-        }
-
-        static func extract(_ value: inout String) -> Self {
-            let options = Self(extracting: value)
-            value = value.replacingOccurrences(of: options.string, with: "")
-            return options
         }
     }
 }

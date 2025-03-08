@@ -8,31 +8,22 @@
 import Foundation
 
 public extension MetadataQuery {
-    /// The result of a query grouped by the metadata attributes specified in ``groupingAttributes``.
+    /// The results of a query grouped by the metadata attributes specified in ``groupingAttributes``.
     struct ResultGroup {
         /// The metadata attribute of the group.
-        public var attribute: MetadataItem.Attribute
-
+        public let attribute: MetadataItem.Attribute
+        
         /// An array containing the group’s metadata items.
-        public var items: [MetadataItem]
-
+        public let items: [MetadataItem]
+        
         /// An array containing the group’s subgroups.
-        public var subgroups: [ResultGroup]?
-
-        init?(_ nsResultGroup: NSMetadataQueryResultGroup) {
-            if let attribute = MetadataItem.Attribute(rawValue: nsResultGroup.attribute) {
-                self.attribute = attribute
-                var items = [MetadataItem]()
-                for index in 0 ..< nsResultGroup.resultCount {
-                    if let item = nsResultGroup.result(at: index) as? MetadataItem {
-                        items.append(item)
-                    }
-                }
-                self.items = items
-                subgroups = nsResultGroup.subgroups?.compactMap { Self($0) }
-            } else {
-                return nil
-            }
+        public let subgroups: [ResultGroup]?
+        
+        init?(_ group: NSMetadataQueryResultGroup) {
+            guard let attribute = MetadataItem.Attribute(rawValue: group.attribute) else { return nil }
+            self.attribute = attribute
+            items = (0..<group.resultCount).compactMap({ group.result(at: $0) as? MetadataItem })
+            subgroups = group.subgroups?.compactMap { Self($0) }
         }
     }
 }

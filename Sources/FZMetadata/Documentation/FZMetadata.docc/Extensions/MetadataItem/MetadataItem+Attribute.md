@@ -115,7 +115,7 @@
 - ``timestamp``
 - ``colorSpace``
 - ``bitsPerSample``
-- ``flashOnOff``
+- ``isFlashOn``
 - ``focalLength``
 - ``deviceManufacturer``
 - ``deviceModel``
@@ -217,6 +217,29 @@
 - ``isScreenCapture``
 - ``screenCaptureType``
 - ``screenCaptureRect``
+
+### iCloud
+
+- ``isUbiquitousItem``
+- ``ubiquitousItemContainerDisplayName``
+- ``ubiquitousItemDownloadRequested``
+- ``ubiquitousItemIsExternalDocument``
+- ``ubiquitousItemURLInLocalContainer``
+- ``ubiquitousItemHasUnresolvedConflicts``
+- ``ubiquitousItemIsDownloaded``
+- ``ubiquitousItemIsDownloading``
+- ``ubiquitousItemIsUploaded``
+- ``ubiquitousItemIsUploading``
+- ``ubiquitousItemPercentDownloaded``
+- ``ubiquitousItemPercentUploaded``
+- ``ubiquitousItemDownloadingStatus``
+- ``ubiquitousItemDownloadingError``
+- ``ubiquitousItemUploadingError``
+- ``ubiquitousItemIsShared``
+- ``ubiquitousSharedItemCurrentUserPermissions``
+- ``ubiquitousSharedItemCurrentUserRole``
+- ``ubiquitousSharedItemMostRecentEditorNameComponents``
+- ``ubiquitousSharedItemOwnerNameComponents``
 
 ### Metadata Query Attributes
 

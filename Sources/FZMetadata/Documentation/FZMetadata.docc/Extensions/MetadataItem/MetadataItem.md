@@ -14,6 +14,7 @@
 ### Accessing Attributes
 
 - ``availableAttributes``
+- ``updatedAttributes``
 - ``Attribute``
 
 ### Common Attributes
@@ -65,6 +66,7 @@
 - ``finderComment``
 - ``finderTags``
 - ``finderTagPrimaryColor``
+- ``FinderTagColor``
 - ``hasCustomIcon``
 - ``usageCount``
 - ``bundleIdentifier``
@@ -128,7 +130,7 @@
 - ``timestamp``
 - ``colorSpace``
 - ``bitsPerSample``
-- ``flashOnOff``
+- ``isFlashOn``
 - ``focalLength``
 - ``deviceManufacturer``
 - ``deviceModel``
@@ -232,6 +234,29 @@
 - ``screenCaptureType``
 - ``ScreenCaptureType``
 - ``screenCaptureRect``
+
+### iCloud
+
+- ``isUbiquitousItem``
+- ``ubiquitousItemContainerDisplayName``
+- ``ubiquitousItemDownloadRequested``
+- ``ubiquitousItemIsExternalDocument``
+- ``ubiquitousItemURLInLocalContainer``
+- ``ubiquitousItemHasUnresolvedConflicts``
+- ``ubiquitousItemIsDownloaded``
+- ``ubiquitousItemIsDownloading``
+- ``ubiquitousItemIsUploaded``
+- ``ubiquitousItemIsUploading``
+- ``ubiquitousItemPercentDownloaded``
+- ``ubiquitousItemPercentUploaded``
+- ``ubiquitousItemDownloadingStatus``
+- ``ubiquitousItemDownloadingError``
+- ``ubiquitousItemUploadingError``
+- ``ubiquitousItemIsShared``
+- ``ubiquitousSharedItemCurrentUserPermissions``
+- ``ubiquitousSharedItemCurrentUserRole``
+- ``ubiquitousSharedItemMostRecentEditorNameComponents``
+- ``ubiquitousSharedItemOwnerNameComponents``
 
 ### Metadata Query Attributes
 

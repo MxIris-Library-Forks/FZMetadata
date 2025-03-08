@@ -9,7 +9,6 @@
 ### Getting the state
 
 - ``state``
-- ``stateHandler``
 - ``State``
 
 ### Configuring the query
@@ -23,7 +22,6 @@
 - ``searchLocations``
 - ``searchScopes``
 - ``SearchScope``
-- ``updateNotificationInterval``
 - ``operationQueue``
 
 ### Getting query results
@@ -32,12 +30,14 @@
 - ``stop()``
 - ``results``
 - ``groupedResults``
-- ``enableMonitoring()``
-- ``disableMonitoring()``
+- ``monitorResults``
+- ``updateNotificationInterval``
 - ``resultsHandler``
-- ``ResultsHandler``
 - ``ResultGroup``
 - ``ResultsDifference``
+- ``postGatheringUpdates``
+- ``hierarchicalResults``
+- ``HierarchicalResults``
 
 ### Sorting query results
 
